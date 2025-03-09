@@ -1,80 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { useAuth } from "../contexts/authContext";
-import { router } from "expo-router";
-import * as Notifications from "expo-notifications";
 
 const ProfileScreen = () => {
-  const { user, logout } = useAuth();
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [password, setPassword] = useState(user?.password || "");
+  const { logout, token } = useAuth(); // ดึง token จาก Context
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState(user?.phone || "");
   const [isEditing, setIsEditing] = useState(false);
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
-  // โหลดข้อมูลโปรไฟล์และสถานะแจ้งเตือนจาก AsyncStorage
+  const API_URL = "http://192.168.1.135:8000";
+  // ดึงข้อมูลผู้ใช้จาก Backend
   useEffect(() => {
-    const loadUserData = async () => {
+    const fetchUserProfile = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem("userProfile");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setName(parsedUser.name || "");
-          setEmail(parsedUser.email || "");
-          setPhone(parsedUser.phone || "");
-        }
-
-        // โหลดสถานะการแจ้งเตือน
-        const storedNotificationStatus = await AsyncStorage.getItem(
-          "notificationsEnabled"
+        const response = await axios.get(
+          "http://localhost:5000/api/user/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
-        if (storedNotificationStatus !== null) {
-          setIsNotificationsEnabled(JSON.parse(storedNotificationStatus));
-        }
+        setName(response.data.name);
+        setEmail(response.data.email);
+        setPhone(response.data.phone);
       } catch (error) {
-        console.error("Error loading user data", error);
+        console.error("Error fetching profile:", error);
+        Alert.alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
       }
     };
-    loadUserData();
+
+    fetchUserProfile();
   }, []);
 
+  // อัปเดตข้อมูลโปรไฟล์
   const handleSave = async () => {
-    if (password !== confirmPassword) {
+    if (password && password !== confirmPassword) {
       Alert.alert("รหัสผ่านไม่ตรงกัน");
       return;
     }
+
     try {
-      const updatedUser = { name, email, phone };
-      await AsyncStorage.setItem("userProfile", JSON.stringify(updatedUser));
+      await axios.put(
+        `${API_URL}/api/users`,
+        { name, email, phone, password },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       Alert.alert("บันทึกข้อมูลสำเร็จ!");
       setIsEditing(false);
     } catch (error) {
-      console.error("Error saving user data", error);
-    }
-  };
-
-  // ฟังก์ชันเปิด/ปิดการแจ้งเตือน
-  const toggleNotifications = async () => {
-    if (isNotificationsEnabled) {
-      // ปิดการแจ้งเตือน
-      Alert.alert("การแจ้งเตือนถูกปิดแล้ว");
-      await AsyncStorage.setItem("notificationsEnabled", JSON.stringify(false));
-      setIsNotificationsEnabled(false);
-    } else {
-      // ขอสิทธิ์การแจ้งเตือน
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("กรุณาอนุญาตให้แอพใช้การแจ้งเตือน");
-        return;
-      }
-
-      // เปิดการแจ้งเตือน
-      Alert.alert("การแจ้งเตือนถูกเปิดแล้ว");
-      await AsyncStorage.setItem("notificationsEnabled", JSON.stringify(true));
-      setIsNotificationsEnabled(true);
+      console.error("Error updating profile:", error);
+      Alert.alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
     }
   };
 
@@ -134,18 +113,6 @@ const ProfileScreen = () => {
           <Text className="text-white font-bold text-lg">แก้ไขโปรไฟล์</Text>
         </TouchableOpacity>
       )}
-
-      {/* ปุ่มเปิด/ปิดการแจ้งเตือน */}
-      <TouchableOpacity
-        className={`mt-4 p-4 rounded-lg w-full items-center ${
-          isNotificationsEnabled ? "bg-gray-600" : "bg-yellow-500"
-        }`}
-        onPress={toggleNotifications}
-      >
-        <Text className="text-white font-bold text-lg">
-          {isNotificationsEnabled ? "ปิดการแจ้งเตือน" : "เปิดการแจ้งเตือน"}
-        </Text>
-      </TouchableOpacity>
 
       <TouchableOpacity
         className="mt-4 bg-red-500 p-4 rounded-lg w-full items-center"
