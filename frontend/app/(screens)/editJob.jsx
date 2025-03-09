@@ -2,38 +2,54 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import useAuth from "../contexts/authContext";
+import axios from "axios";
+
+const API_URL = "http://192.168.1.135:8000"; // 🔹 เปลี่ยนเป็น URL Backend ของคุณ
 
 const EditJobScreen = () => {
+  const { token } = useAuth();
   const job =
     useLocalSearchParams().job && JSON.parse(useLocalSearchParams().job);
+
+  // ใช้ state เก็บข้อมูลงาน
   const [title, setTitle] = useState(job?.title || "");
   const [company, setCompany] = useState(job?.company || "");
   const [salary, setSalary] = useState(job?.salary || "");
   const [location, setLocation] = useState(job?.location || "");
   const [description, setDescription] = useState(job?.description || "");
 
+  // ฟังก์ชันบันทึกข้อมูลที่แก้ไข
   const handleSave = async () => {
     if (!title || !location || !salary || !description) {
       Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
-    Alert.alert("บันทึกการแก้ไขสำเร็จ!");
-    try {
-      const storedJobs = await AsyncStorage.getItem("jobs");
-      let jobs = storedJobs ? JSON.parse(storedJobs) : [];
 
-      jobs = jobs.map((jobStorage) =>
-        jobStorage.id === job.id
-          ? { ...jobStorage, title, company, salary, location, description }
-          : jobStorage
+    try {
+      // ส่งข้อมูลที่แก้ไขไปอัปเดตที่ backend
+      await axios.put(
+        `${API_URL}/api/jobs/${job.id}`,
+        {
+          title,
+          company,
+          salary,
+          location,
+          description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ ส่ง Token ไปที่ Backend
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      await AsyncStorage.setItem("jobs", JSON.stringify(jobs));
       Alert.alert("บันทึกการแก้ไขสำเร็จ!");
-      router.back(); // กลับไปที่หน้าจัดการงาน
+      router.back(); // กลับไปหน้ารายการงาน
     } catch (error) {
       console.error("บันทึกงานล้มเหลว:", error);
+      Alert.alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
   };
 
@@ -57,6 +73,7 @@ const EditJobScreen = () => {
         placeholder="เงินเดือน"
         value={salary}
         onChangeText={setSalary}
+        keyboardType="numeric"
       />
       <TextInput
         className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"

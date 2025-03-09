@@ -11,10 +11,12 @@ import { router } from "expo-router";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
+import useAuth from "../contexts/authContext";
 
 const API_URL = "http://192.168.1.135:8000";
 
 export default function JobScreen() {
+  const { token } = useAuth();
   const [location, setLocation] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,8 +24,14 @@ export default function JobScreen() {
   // ✅ โหลดข้อมูลงานจาก API
   const fetchJobs = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/jobs`);
+      const response = await axios.get(`${API_URL}/api/jobs`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ ส่ง Token ไปที่ Backend
+          "Content-Type": "application/json",
+        },
+      });
       setJobs(response.data); // ✅ โหลดงานก่อน
+      console.log("respond get job", response.data);
     } catch (error) {
       console.error("❌ โหลดข้อมูลงานล้มเหลว:", error);
       Alert.alert("เกิดข้อผิดพลาดในการโหลดงาน");
@@ -112,7 +120,9 @@ export default function JobScreen() {
         onPress={() => router.push("/postJob")}
         className="text-blue-500 font-montserrat font-bold p-4"
       >
-        ประกาศหาพนักงาน (สำหรับเจ้าของร้าน)
+        <Text className="text-black text-center">
+          ประกาศหาพนักงาน (สำหรับเจ้าของร้าน)
+        </Text>
       </TouchableOpacity>
 
       {/* ✅ รายการงาน */}
@@ -124,6 +134,7 @@ export default function JobScreen() {
             <Text className="text-lg font-bold">{item.title}</Text>
             <Text className="text-gray-600">{item.company}</Text>
             <Text className="text-blue-500">{item.salary}</Text>
+            <Text className="text-blue-500">{item.description}</Text>
             <TouchableOpacity
               onPress={() =>
                 router.push({

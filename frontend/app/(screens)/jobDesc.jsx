@@ -3,51 +3,52 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 import axios from "axios";
+import useAuth from "../contexts/authContext";
 
 const API_URL = "http://192.168.1.135:8000"; // ✅ เปลี่ยนเป็น URL ของ Backend
 
 const JobDesc = () => {
   const { job } = useLocalSearchParams(); // ✅ ดึง job จาก params
   const [jobData, setJobData] = useState(job ? JSON.parse(job) : null);
+  const { token } = useAuth();
 
   console.log("📥 job ที่ได้รับจาก params:", jobData);
 
   // ✅ ถ้า jobData มีแค่ ID ให้โหลดรายละเอียดงานจาก API
   useEffect(() => {
-    if (!jobData || !jobData.description) {
-      if (!jobData?.id) {
-        console.error("❌ ไม่มี ID ของงาน, ไม่สามารถโหลดรายละเอียดงานได้");
-        return;
-      }
-
-      const fetchJobDetails = async () => {
-        try {
-          const response = await axios.get(`${API_URL}/api/${jobData.id}`);
-          setJobData(response.data);
-        } catch (error) {
-          console.error("❌ โหลดรายละเอียดงานล้มเหลว:", error);
-          Alert.alert("เกิดข้อผิดพลาดในการโหลดข้อมูลงาน");
-        }
-      };
-
-      fetchJobDetails();
+    if (!jobData) {
+      console.error("❌ ไม่มีข้อมูลงาน, ไม่สามารถโหลดรายละเอียดได้");
+      Alert.alert("เกิดข้อผิดพลาด", "ไม่พบข้อมูลงาน");
+      return;
     }
-  }, []); // ✅ ใช้ jobData.id เป็น dependency
+  }, [jobData]);
 
   // ✅ ฟังก์ชันสมัครงานและบันทึกลง PostgreSQL
   const handleApplyJob = async () => {
     if (!jobData) return;
 
     try {
-      const response = await axios.post(`${API_URL}/api/applications`, {
-        jobId: jobData.id,
-        status: "กำลังพิจารณา",
-      });
-
+      const response = await axios.post(
+        `${API_URL}/api/applications`,
+        {
+          jobId: jobData.id,
+          status: "กำลังพิจารณา",
+          jobtitle: jobData.title,
+          jobcomp: jobData.company,
+          jobsalary: jobData.salary,
+          jobdesc: jobData.description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ ส่ง Token ไปที่ Backend
+          },
+        }
+      );
+      console.log("job");
       if (response.status === 201) {
         Alert.alert("✅ สมัครงานสำเร็จ!", "ข้อมูลของคุณถูกบันทึกแล้ว");
+        router.push("/jobAppStatus");
       }
-      router.push("/jobAppStatus");
     } catch (error) {
       console.error("❌ สมัครงานล้มเหลว:", error);
       Alert.alert("เกิดข้อผิดพลาดในการสมัครงาน");

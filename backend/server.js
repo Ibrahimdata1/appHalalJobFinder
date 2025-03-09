@@ -6,13 +6,16 @@ import { Sequelize } from "sequelize";
 import authRoutes from "./routes/authRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
-import { connectDB } from "./models/User.js";
-import "./models/Job.js";
-import "./models/Application.js";
+import userRoute from "./routes/userRouter.js";
+import { connectDB } from "./models/Users.js";
+import authenticateUser from "./middleware/auth.js";
+import "./models/Jobs.js";
+import "./models/Applications.js";
 
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 app.use(
@@ -24,16 +27,12 @@ app.use(
 );
 app.use(bodyParser.json());
 
-// เชื่อมต่อ PostgreSQL + PostGIS
-const sequelize = new Sequelize(process.env.DB_URL, {
-  dialect: "postgres",
-  logging: false,
-});
 await connectDB();
 
 app.use("/auth", authRoutes);
-app.use("/api", jobRoutes);
-app.use("/api", applicationRoutes);
+app.use("/api/users", authenticateUser, userRoute);
+app.use("/api/jobs", authenticateUser, jobRoutes);
+app.use("/api/applications", authenticateUser, applicationRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 Backend API is running...");
