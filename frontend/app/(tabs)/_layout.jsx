@@ -23,7 +23,11 @@ const TabsLayout = () => {
           tabBarInactiveTintColor: "#CDCDE0",
           tabBarStyle: {
             backgroundColor: "#161622",
+            borderTopLeftRadius: 15, // ✅ เพิ่มขอบมน
+            borderTopRightRadius: 15,
+            paddingBottom: 10, // ✅ ป้องกันการบัง UI
           },
+          tabBarHideOnKeyboard: true, // ✅ ซ่อน Tab Bar เมื่อลูกค้าใช้คีย์บอร์ด
         }}
       >
         <Tabs.Screen
@@ -36,23 +40,24 @@ const TabsLayout = () => {
             ),
           }}
         />
+
         <Tabs.Screen
-          name="bookmark"
+          name="jobScreen"
           options={{
-            title: "Bookmark",
+            title: "jobScreen",
             headerShown: false,
             tabBarIcon: ({ color }) => (
-              <TabIcon IconComponent={Bookmark} color={color} />
+              <TabIcon IconComponent={Pencil} color={color} />
             ),
           }}
         />
         <Tabs.Screen
-          name="create"
+          name="postJob"
           options={{
-            title: "Create",
+            title: "postJob",
             headerShown: false,
             tabBarIcon: ({ color }) => (
-              <TabIcon IconComponent={Pencil} color={color} />
+              <TabIcon IconComponent={Bookmark} color={color} />
             ),
           }}
         />

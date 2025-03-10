@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 const router = express.Router();
+let clients = [];
 
 // ✅ ดึงรายการงานทั้งหมด
 router.get("/", async (req, res) => {
@@ -15,6 +16,23 @@ router.get("/", async (req, res) => {
     return res.status(500).json({ message: "เกิดข้อผิดพลาดในการโหลดงาน" });
   }
 });
+router.get("/stream", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  clients.push(res);
+
+  req.on("close", () => {
+    clients = clients.filter((client) => client !== res);
+  });
+});
+// ฟังก์ชันส่งข้อมูลไปยัง clients ทุกคน
+const sendJobUpdate = (jobData) => {
+  clients.forEach((client) =>
+    client.write(`data: ${JSON.stringify(jobData)}\n\n`)
+  );
+};
 
 // ✅ เพิ่มงานใหม่
 router.post("/", async (req, res) => {
@@ -32,6 +50,7 @@ router.post("/", async (req, res) => {
       lat,
       lng,
     });
+    sendJobUpdate(newJob);
     return res.status(201).json({ message: "เพิ่มงานสำเร็จ", job: newJob });
   } catch (error) {
     console.error("❌ เพิ่มงานล้มเหลว:", error);

@@ -39,7 +39,7 @@ const RootLayout = () => {
             ) : null,
         }}
       >
-        <Stack.Screen name="index" />
+        <Stack.Screen name="signIn" />
       </Stack>
     </AuthProvider>
   );

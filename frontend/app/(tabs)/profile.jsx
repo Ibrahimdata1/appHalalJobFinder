@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/authContext";
 
 const ProfileScreen = () => {
@@ -17,12 +18,9 @@ const ProfileScreen = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/user/profile",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${API_URL}/api/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setName(response.data.name);
         setEmail(response.data.email);
         setPhone(response.data.phone);
@@ -58,69 +56,71 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-gray-100 p-5">
-      <Text className="text-2xl font-bold mb-5">โปรไฟล์ของฉัน</Text>
-      <TextInput
-        className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
-        placeholder="ชื่อ"
-        value={name}
-        onChangeText={setName}
-        editable={isEditing}
-      />
-      <TextInput
-        className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
-        placeholder="อีเมล"
-        value={email}
-        onChangeText={setEmail}
-        editable={isEditing}
-      />
-      <TextInput
-        className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
-        placeholder="รหัสผ่าน"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        editable={isEditing}
-      />
-      <TextInput
-        className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
-        placeholder="ยืนยันรหัสผ่าน"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        editable={isEditing}
-      />
-      <TextInput
-        className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
-        placeholder="เบอร์โทรศัพท์"
-        value={phone}
-        onChangeText={setPhone}
-        editable={isEditing}
-      />
+    <SafeAreaView style={{ flex: 1, paddingBottom: 70 }}>
+      <View className="flex-1 justify-center items-center bg-gray-100 p-5">
+        <Text className="text-2xl font-bold mb-5">โปรไฟล์ของฉัน</Text>
+        <TextInput
+          className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
+          placeholder="ชื่อ"
+          value={name}
+          onChangeText={setName}
+          editable={isEditing}
+        />
+        <TextInput
+          className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
+          placeholder="อีเมล"
+          value={email}
+          onChangeText={setEmail}
+          editable={isEditing}
+        />
+        <TextInput
+          className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
+          placeholder="รหัสผ่าน"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          editable={isEditing}
+        />
+        <TextInput
+          className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
+          placeholder="ยืนยันรหัสผ่าน"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          editable={isEditing}
+        />
+        <TextInput
+          className="w-full h-12 bg-white rounded-lg px-4 mb-4 border border-gray-300"
+          placeholder="เบอร์โทรศัพท์"
+          value={phone}
+          onChangeText={setPhone}
+          editable={isEditing}
+        />
 
-      {isEditing ? (
-        <TouchableOpacity
-          className="bg-green-500 p-4 rounded-lg w-full items-center"
-          onPress={handleSave}
-        >
-          <Text className="text-white font-bold text-lg">บันทึก</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          className="bg-blue-500 p-4 rounded-lg w-full items-center"
-          onPress={() => setIsEditing(true)}
-        >
-          <Text className="text-white font-bold text-lg">แก้ไขโปรไฟล์</Text>
-        </TouchableOpacity>
-      )}
+        {isEditing ? (
+          <TouchableOpacity
+            className="bg-green-500 p-4 rounded-lg w-full items-center"
+            onPress={handleSave}
+          >
+            <Text className="text-white font-bold text-lg">บันทึก</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            className="bg-blue-500 p-4 rounded-lg w-full items-center"
+            onPress={() => setIsEditing(true)}
+          >
+            <Text className="text-white font-bold text-lg">แก้ไขโปรไฟล์</Text>
+          </TouchableOpacity>
+        )}
 
-      <TouchableOpacity
-        className="mt-4 bg-red-500 p-4 rounded-lg w-full items-center"
-        onPress={logout}
-      >
-        <Text className="text-white font-bold text-lg">ออกจากระบบ</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          className="mt-4 bg-red-500 p-4 rounded-lg w-full items-center"
+          onPress={logout}
+        >
+          <Text className="text-white font-bold text-lg">ออกจากระบบ</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 

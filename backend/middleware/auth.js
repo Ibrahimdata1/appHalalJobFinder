@@ -4,7 +4,8 @@ const authenticateUser = (req, res, next) => {
   console.log(`📌 Request: ${req.method} ${req.url}`);
   console.log("📌 Headers ที่ได้รับ:", req.headers);
   try {
-    const token = req.headers.authorization?.split(" ")[1]; // 🔹 ดึง token จาก header
+    const token = req.headers.authorization?.split(" ")[1] || req.query.token; // 🔹 ดึง token จาก header
+    console.log("🔑 Token ที่ Backend ได้รับ:", token);
 
     if (!token) {
       console.error("❌ ไม่พบ Token");
